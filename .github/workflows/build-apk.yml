@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Offline Android APK
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Android Project
+      - name: Checkout Project
         uses: actions/checkout@v4
 
       - name: Setup Java 17
@@ -20,20 +20,28 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Gradle
+      - name: Setup Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.3.1'
 
-      - name: Build Release APK
-        run: gradle assembleRelease
+      - name: Disable Google Services
+        run: |
+          sed -i '/com.google.gms.google-services/d' app/build.gradle.kts
+          rm -f app/google-services.json
+          rm -f app/src/main/google-services.json
+          rm -f app/src/release/google-services.json
+          rm -f app/src/debug/google-services.json
 
-      - name: Find APK
-        run: find . -type f -name "*.apk" -print
+      - name: Build Offline Release APK
+        run: gradle assembleRelease --stacktrace
+
+      - name: Locate APK
+        run: find app/build/outputs -type f -name "*.apk" -print
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: JK-Creations-APK
+          name: JK-Creations-Offline-APK
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
