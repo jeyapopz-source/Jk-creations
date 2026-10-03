@@ -1,0 +1,42 @@
+name: Build Android Release APK
+
+on:
+workflow_dispatch:
+push:
+branches:
+- main
+
+jobs:
+build-apk:
+name: Build Release APK
+runs-on: ubuntu-latest
+
+steps:
+  - name: Checkout source code
+    uses: actions/checkout@v4
+
+  - name: Set up JDK
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
+      cache: gradle
+
+  - name: Make Gradle executable
+    run: chmod +x ./gradlew
+
+  - name: Build Release APK
+    run: ./gradlew assembleRelease --stacktrace
+
+  - name: Find generated APK
+    run: |
+      echo "Generated APK files:"
+      find . -type f -name "*.apk" -print
+
+  - name: Upload Release APK
+    uses: actions/upload-artifact@v4
+    with:
+      name: JK-Creations-Release-APK
+      path: |
+        app/build/outputs/apk/release/*.apk
+      if-no-files-found: error
